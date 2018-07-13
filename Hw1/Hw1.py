@@ -5,22 +5,37 @@ import matplotlib.pyplot as plt
 
 def FetchData(hours):
 	data = pd.read_csv("train.csv").as_matrix()
-	X = np.empty([0,9])
+	X = np.empty([0,hours])
 	Y = np.empty([0,1])
 	
-	#PM2.5 is at 10th of Row
 	for i in range(0, data.shape[0], 18):
-		
+		#PM2.5 is at index 9  of data
 		pm = data[ i+9, 3: ].astype(float)
 		for j in range(0, 24, hours+1):
 			if j+hours > 24:
 				break
-			xi = pm[j:j+hours].reshape(1,9)
+			xi = pm[j:j+hours].reshape(1,hours)
 			yi = np.array([pm[j+hours]]).reshape(1,1)
 			X = np.concatenate( (X,xi), axis=0)
 			Y = np.concatenate( (Y,yi), axis=0)
 	
 	X = np.concatenate( (X, np.ones([X.shape[0],1])), axis=1) #add one 
+	return X,Y
+
+
+
+def TestData(hours):
+	data = pd.read_csv("test.csv").as_matrix()
+	X = np.empty([0,hours])
+	Y = np.empty([0,1])
+	for i in range(0, data.shape[0], 18):
+		#PM2.5 is at index 9  of data
+		xi = data[ i+9, 2:-1].reshape(1,hours).astype(float)
+		yi = np.array([data[ i+9, -1]]).reshape(1,1).astype(float)
+		X = np.concatenate( (X,xi), axis = 0)
+		Y = np.concatenate( (Y,yi), axis = 0)
+	X = np.concatenate( (X, np.ones([X.shape[0],1])), axis=1) #add one 
+
 	return X,Y
 
 def GD(X, Y, lr, iter): #1e-7
@@ -37,7 +52,7 @@ def GD(X, Y, lr, iter): #1e-7
 	return theta ,ls_rec,iter_rec
 
 
-def SGD_ADAGRAD(X, Y, lr, iter): #1e-4
+def SGD_ADAGRAD(X, Y, lr, iter): #1e-3
 	ls_rec  = []
 	iter_rec = []
 	theta = np.zeros([X.shape[1],1])
@@ -55,7 +70,7 @@ def SGD_ADAGRAD(X, Y, lr, iter): #1e-4
 		iter_rec.append(i)
 	return theta,ls_rec,iter_rec
 
-def SGD(X, Y, lr, iter): #1e-7
+def SGD(X, Y, lr, iter): #1e-6
 	ls_rec  = []
 	iter_rec = []
 	theta = np.zeros([X.shape[1],1])
@@ -74,32 +89,58 @@ def SGD(X, Y, lr, iter): #1e-7
 
 
 
+
 def main():
-	X,Y = FetchData(9)
-	theta, ls_rec, iter_rec = SGD(X, Y, 1e-9, 10000)
+	X,Y = FetchData(8)
+	iter = 1000
+	X_test, Y_test = TestData(8)
 	
-	result = np.dot(X,theta)
-	cmp = np.concatenate((Y,result),axis=1)
-	print(cmp)
-	print(ls_rec[-1])	
+	
+	#GD
+	theta, ls_rec, iter_rec = GD(X, Y, 1e-6, iter)
+	
+	result = np.dot(X_test,theta)
+	Loss = np.sqrt(np.sum((Y_test-np.dot(X_test,theta))**2)/X_test.shape[0])
+	print("train")
+	print(ls_rec[-1])
+	print("test")
+	print(Loss)	
+	
+	plt.plot(iter_rec, ls_rec)
+	plt.xlabel("iter")
+	plt.ylabel("Loss")
+	plt.savefig("GD.png")
+	
+	
+	#SGD
+	theta, ls_rec, iter_rec = SGD(X, Y, 1e-5, iter)
+	
+	result = np.dot(X_test,theta)
+	Loss = np.sqrt(np.sum((Y_test-np.dot(X_test,theta))**2)/X_test.shape[0])
+	print("train")
+	print(ls_rec[-1])
+	print("test")
+	print(Loss)		
 	
 	plt.plot(iter_rec, ls_rec)
 	plt.xlabel("iter")
 	plt.ylabel("Loss")
 	plt.savefig("SGD.png")
 	
-	theta, ls_rec, iter_rec = SGD_ADAGRAD(X, Y, 1e-5, 10000)
+	#SGD ADAGRAD
+	theta, ls_rec, iter_rec = SGD_ADAGRAD(X, Y, 1e-2, iter)
 	
-	result = np.dot(X,theta)
-	cmp = np.concatenate((Y,result),axis=1)
-	print(cmp)
-	print(ls_rec[-1])	
+	result = np.dot(X_test,theta)
+	Loss = np.sqrt(np.sum((Y_test-np.dot(X_test,theta))**2)/X_test.shape[0])
+	print("train")
+	print(ls_rec[-1])
+	print("test")
+	print(Loss)			
 	
 	plt.plot(iter_rec, ls_rec)
 	plt.xlabel("iter")
 	plt.ylabel("Loss")
 	plt.savefig("SGD_ADAGRAD.png")
-	
 	
 	
 	
