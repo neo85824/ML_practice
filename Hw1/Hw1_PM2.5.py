@@ -56,6 +56,7 @@ def SGD_ADAGRAD(X, Y, lr, iter): #1e-3
 	ls_rec  = []
 	iter_rec = []
 	theta = np.zeros([X.shape[1],1])
+
 	
 	for i in range(iter):
 		n_theta = 0
@@ -92,11 +93,15 @@ def SGD(X, Y, lr, iter): #1e-6
 
 def main():
 	X,Y = FetchData(8)
-	iter = 100000
+	iter = 1000
 	X_test, Y_test = TestData(8)
 	
 	#SGD ADAGRAD
 	theta, ls_rec, iter_rec = SGD_ADAGRAD(X, Y, 1e-4, iter)
+	
+	f = open('theta.txt','w')
+	f.write(str(theta))
+	f.close()
 	
 	result = np.dot(X_test,theta)
 	Loss = np.sqrt(np.sum((Y_test-np.dot(X_test,theta))**2)/X_test.shape[0])
