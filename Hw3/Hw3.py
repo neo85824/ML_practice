@@ -145,6 +145,8 @@ def main():
     x_train = x_train[ : int(x_train.shape[0]*0.9)]
     y_train = y_train[ : int(y_train.shape[0]*0.9)]
 
+
+    
     datagen = ImageDataGenerator( featurewise_center=False,
                                     featurewise_std_normalization=False,
                                     rotation_range=10,
@@ -153,14 +155,13 @@ def main():
                                     horizontal_flip=True)
     datagen.fit(x_train, augment = True)
     history = model.fit_generator(datagen.flow(x_train, y_train, batch_size= batch_size),
-                    steps_per_epoch=5*len(x_train)//batch_size, epochs=epochs, validation_data=(val_x,val_y), shuffle=True , callbacks=[early_stopping], verbose=1)
+                   steps_per_epoch=5*len(x_train)//batch_size, epochs=epochs, validation_data=(val_x,val_y), shuffle=True , callbacks=[early_stopping], verbose=1)
     #history = model.fit(x_train, y_train, validation_split=0.1,batch_size=batch_size, shuffle=True , callbacks=[checkpointer], epochs=epochs, verbose=2)
     
     #Save
     model.save('weights.hdf5')
 
-    #Load best weight
-    #model.load_weights('weights_aug_0.6689.hdf5')
+    
 
     #Plot Loss 
     
@@ -173,11 +174,22 @@ def main():
     plt.legend()
     plt.show()
     
- 
+    #Load best weight
+    #model.load_weights('weights_best.hdf5')
+
     #Testing 
     result = model.predict(x_test)
     score = model.evaluate(x_test, y_test)
     print("Loss and Accu:", score)
+
+    ans = np.argmax(result, axis=1)
+
+    result_file = sys.argv[3]
+    file = open(result_file, 'w')
+    file.write("id,label\n")
+    for i in range(ans.shape[0]):
+        file.write("{},{}\n".format(i, int(ans[i])))
+    file.close()
 
 if __name__ == "__main__":
    main()
